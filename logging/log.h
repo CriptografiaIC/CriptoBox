@@ -1,0 +1,1 @@
+void log(char* invoker, long millis , char* message);
