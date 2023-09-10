@@ -13,23 +13,91 @@
 
 #define BUZZER_PORT 10
 
+// https://docs.arduino.cc/built-in-examples/digital/Button
+#define BUTTON_PORT 2
 
+// https://docs.arduino.cc/learn/electronics/potentiometer-basics
+#define POTENTIOMETER_PORT A2
+
+/* 0: Tela inicial
+   1: Escolha do primo p
+   2: Escolha do primo q
+*/
+
+public unsigned short int currentStage = 0;
+public unsigned short int p;
+public unsigned short int q;
+public unsigned short int curr; 
+public int[] primes = {1, 3, 5, 7, 11}
+public int lastPotPos;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   setupLCD();
+  setupBtn();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  anim_1_test(true);
-  // Será usado no keypad/numpad (https://www.ardumotive.com/how-to-use-a-keypad-en.html)
+  if(currentStage == 0) startup();
+  if(isButtonPressed) onButtonPress();
+  int pot = getCurrentPotentiometerPosition();
+  if(pot != lastPotPos) onPotentiometerValueChange(lastPotPos, pot);
+  
 }
 
 void log(String invoker, String action) {
   Serial.println("[" + String(millis()) + "] " + invoker + ": " + action);
   
 } 
+
+void setupBtn() {
+  pinMode(BUTTON_PORT, INPUT);
+}
+
+void isButtonPressed() {
+  return digitalRead(BUTTON_PORT) == HIGH;
+}
+
+void onButtonPress() {
+  if(currentStage == 0) { // Muda para o 1
+    currentStage = 1;
+    clearLCD();
+    printLCD("Escolha a variável p", 0,0);
+  }
+  if(currentStage == 1) { // Muda para o 2
+    currentStage = 2;
+    p = curr; // Salva a variável
+    curr = 0;
+    clearLCD();
+    printLCD("Escolha a variável q", 0,0);
+  }
+  if(currentStage == 2) {
+    currentStage = 3; // Prossegue com o jogo.
+    q = curr; // Salva a variável
+    curr = 0;
+    clearLCD();
+    printLCD("Fim de execução", 0, 0);
+  }
+}
+
+void setupPot() {
+  pinMode(POTENTIOMETER_PORT, INPUT);
+}
+
+int getCurrentPotentiometerPosition() {
+  int potVal = analogRead(POTENTIOMETER_PORT);
+  if (potVal < 341)  // Lowest third of the potentiometer's range (0-340)
+    potVal = (potVal * 3) / 4; // Normalize to 0-255
+  return potVal;
+}
+
+void onPotentiometerValueChange(int from, int to) {
+  lastPotPos = to;
+  curr = primes[(floor(to/51) >= 5 ? 4 : floor(to/51))];
+  if(currentStage == 1 || currentStage == 2) refreshPotentiometerDisplay();
+}
+
 
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
@@ -51,6 +119,10 @@ void printLCD(const String message, short unsigned int x, short unsigned int y) 
     lcd.print(message);
 }
 
+void clearLCD() {
+  lcd.clear();
+}
+
 void setLCDState(bool state) {
   if(state) {
     log("setLCDState", "Desligou o LCD");
@@ -59,6 +131,10 @@ void setLCDState(bool state) {
     log("setLCDState", "Ligou o LCD");
     lcd.display();
   }
+}
+
+void refreshPotentiometerDisplay() {
+  printLCD("Primo: " + String(curr),0, 1)
 }
 
 /*
@@ -103,4 +179,9 @@ void anim_1_test(bool clean_before) {
       printLCD(String(letter), x, y);
     }
   }
+}
+
+void startup() {
+  printLCD("Criptografia - IC", 0, 0);
+  printLCD("Aperte o botão", 0, 1);
 }
