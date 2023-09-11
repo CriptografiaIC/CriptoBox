@@ -14,7 +14,7 @@
 #define BUZZER_PORT 10
 
 // https://docs.arduino.cc/built-in-examples/digital/Button
-#define BUTTON_PORT 2
+#define BUTTON_PORT 6
 
 // https://docs.arduino.cc/learn/electronics/potentiometer-basics
 #define POTENTIOMETER_PORT A2
@@ -24,12 +24,12 @@
    2: Escolha do primo q
 */
 
-public unsigned short int currentStage = 0;
-public unsigned short int p;
-public unsigned short int q;
-public unsigned short int curr; 
-public int[] primes = {1, 3, 5, 7, 11}
-public int lastPotPos;
+short int currentStage = 0;
+short int p;
+short int q;
+short int curr; 
+int primes[5] = {2, 3, 5, 7, 11};
+int lastPotPos;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -52,14 +52,15 @@ void log(String invoker, String action) {
 } 
 
 void setupBtn() {
-  pinMode(BUTTON_PORT, INPUT);
+  pinMode(BUTTON_PORT, INPUT_PULLUP);
 }
 
-void isButtonPressed() {
+bool isButtonPressed() {
   return digitalRead(BUTTON_PORT) == HIGH;
 }
 
 void onButtonPress() {
+  log("onButtonPress","pressionado");
   if(currentStage == 0) { // Muda para o 1
     currentStage = 1;
     clearLCD();
@@ -94,7 +95,7 @@ int getCurrentPotentiometerPosition() {
 
 void onPotentiometerValueChange(int from, int to) {
   lastPotPos = to;
-  curr = primes[(floor(to/51) >= 5 ? 4 : floor(to/51))];
+  curr = primes[(int) (floor(to/51) >= 5 ? 4 : floor(to/51))];
   if(currentStage == 1 || currentStage == 2) refreshPotentiometerDisplay();
 }
 
@@ -134,7 +135,7 @@ void setLCDState(bool state) {
 }
 
 void refreshPotentiometerDisplay() {
-  printLCD("Primo: " + String(curr),0, 1)
+  printLCD("Primo: " + String(curr),0, 1);
 }
 
 /*
