@@ -27,7 +27,7 @@
 short int currentStage = 0;
 short int p;
 short int q;
-short int curr; 
+short int curr = 0;
 int primes[5] = {2, 3, 5, 7, 11};
 int lastPotPos;
 void setup() {
@@ -35,19 +35,23 @@ void setup() {
   Serial.begin(9600);
   setupLCD();
   setupBtn();
+  if(currentStage == 0) startup();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(currentStage == 0) startup();
-  if(isButtonPressed) onButtonPress();
+  
+  if(isButtonPressed()) onButtonPress();
   int pot = getCurrentPotentiometerPosition();
   if(pot != lastPotPos) onPotentiometerValueChange(lastPotPos, pot);
   
+  int x = digitalRead(BUTTON_PORT);
+  
+  // Serial.println("Current phase: " + String(currentStage));
 }
 
 void log(String invoker, String action) {
-  Serial.println("[" + String(millis()) + "] " + invoker + ": " + action);
+  Serial.println("<stage::"+String(currentStage)+"> [" + String(millis()) + "] " + invoker + ": " + action);
   
 } 
 
@@ -60,19 +64,19 @@ bool isButtonPressed() {
 }
 
 void onButtonPress() {
-  log("onButtonPress","pressionado");
+  log("onButtonPress","pressionado " + String(digitalRead(BUTTON_PORT) + " / curr: " + String(curr)));
   if(currentStage == 0) { // Muda para o 1
     currentStage = 1;
-    clearLCD();
+    // clearLCD();
     printLCD("Escolha a variável p", 0,0);
-  }
+  } else if(curr == 0) return; else
   if(currentStage == 1) { // Muda para o 2
     currentStage = 2;
     p = curr; // Salva a variável
     curr = 0;
     clearLCD();
     printLCD("Escolha a variável q", 0,0);
-  }
+  } else
   if(currentStage == 2) {
     currentStage = 3; // Prossegue com o jogo.
     q = curr; // Salva a variável
@@ -88,14 +92,13 @@ void setupPot() {
 
 int getCurrentPotentiometerPosition() {
   int potVal = analogRead(POTENTIOMETER_PORT);
-  if (potVal < 341)  // Lowest third of the potentiometer's range (0-340)
-    potVal = (potVal * 3) / 4; // Normalize to 0-255
   return potVal;
 }
 
 void onPotentiometerValueChange(int from, int to) {
+  log("onPotentiometerValueChange", String(getCurrentPotentiometerPosition()));
   lastPotPos = to;
-  curr = primes[(int) (floor(to/51) >= 5 ? 4 : floor(to/51))];
+  curr = primes[(int) (floor(to/341) >= 3 ? 2 : floor(to/341))];
   if(currentStage == 1 || currentStage == 2) refreshPotentiometerDisplay();
 }
 
@@ -112,12 +115,14 @@ void setupLCD () {
 void printLCD(const String message) {
     log("printLCD", "Imprimiu '" + message + "'");
     lcd.print(message);
+  //Serial.println(message);
 }
 
 void printLCD(const String message, short unsigned int x, short unsigned int y) {
     log("printLCD", "Imprimiu '" + message + "' nas coordenadas " + x + "," + y);
     lcd.setCursor(x,y);
     lcd.print(message);
+  //Serial.println(message);
 }
 
 void clearLCD() {
@@ -183,6 +188,18 @@ void anim_1_test(bool clean_before) {
 }
 
 void startup() {
-  printLCD("Criptografia - IC", 0, 0);
-  printLCD("Aperte o botão", 0, 1);
+  char a[] = "Criptografia - IC";
+  char b[] = "Aperte o botao";
+  clearLCD();
+  printLCD("Criptografia IC           ",0,0);
+  printLCD(b,0,1);
+
+  /*int x = 0;
+  for(char b : a) {
+    x++;
+    printLCD(String(b),x , 0); delay(250);
+  }
+ 
+  printLCD("Aperte o botao", 0, 1); 
+   delay(500);*/
 }
