@@ -28,7 +28,7 @@ short int currentStage = 0;
 short int p;
 short int q;
 short int curr = 0;
-int primes[5] = {2, 3, 5, 7, 11};
+int primes[11] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
 int lastPotPos;
 void setup() {
   // put your setup code here, to run once:
@@ -96,7 +96,7 @@ int getCurrentPotentiometerPosition() {
 void onPotentiometerValueChange(int from, int to) {
   log("onPotentiometerValueChange", String(getCurrentPotentiometerPosition()));
   lastPotPos = to;
-  curr = primes[(int) (floor(to/341) >= 3 ? 2 : floor(to/341))];
+  curr = primes[(int) (floor(to/93) >= 11 ? 10 : floor(to/93))];
   if(currentStage == 1 || currentStage == 2) refreshPotentiometerDisplay();
 }
 
@@ -135,7 +135,7 @@ void setLCDState(bool state) {
 }
 
 void refreshPotentiometerDisplay() {
-  printLCD("Primo: " + String(curr),0, 1);
+  printLCD("Primo: " + String(curr) + "  ",0, 1);
 }
 
 void startup() {
