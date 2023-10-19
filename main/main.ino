@@ -17,7 +17,7 @@
 #define BUTTON_PORT 6
 
 // https://docs.arduino.cc/learn/electronics/potentiometer-basics
-#define POTENTIOMETER_PORT A2
+#define POTENTIOMETER_PORT A5
 
 /* 0: Tela inicial
    1: Escolha do primo p
@@ -46,8 +46,6 @@ void loop() {
   if(pot != lastPotPos) onPotentiometerValueChange(lastPotPos, pot);
   
   int x = digitalRead(BUTTON_PORT);
-  
-  // Serial.println("Current phase: " + String(currentStage));
 }
 
 void log(String invoker, String action) {
@@ -67,22 +65,22 @@ void onButtonPress() {
   log("onButtonPress","pressionado " + String(digitalRead(BUTTON_PORT) + " / curr: " + String(curr)));
   if(currentStage == 0) { // Muda para o 1
     currentStage = 1;
-    // clearLCD();
-    printLCD("Escolha a variável p", 0,0);
+    clearLCD();
+    printLCD("Variavel p", 0,0);
   } else if(curr == 0) return; else
   if(currentStage == 1) { // Muda para o 2
     currentStage = 2;
     p = curr; // Salva a variável
     curr = 0;
     clearLCD();
-    printLCD("Escolha a variável q", 0,0);
+    printLCD("Variavel q", 0,0);
   } else
   if(currentStage == 2) {
     currentStage = 3; // Prossegue com o jogo.
     q = curr; // Salva a variável
     curr = 0;
     clearLCD();
-    printLCD("Fim de execução", 0, 0);
+    printLCD("Fim de execucao", 0, 0);
   }
 }
 
@@ -109,20 +107,17 @@ LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 void setupLCD () {
     log("setupLCD", "Inicializando LCD com autoscroll.");
     lcd.begin(16, 2);
-    lcd.autoscroll();
 }
 
 void printLCD(const String message) {
     log("printLCD", "Imprimiu '" + message + "'");
     lcd.print(message);
-  //Serial.println(message);
 }
 
 void printLCD(const String message, short unsigned int x, short unsigned int y) {
     log("printLCD", "Imprimiu '" + message + "' nas coordenadas " + x + "," + y);
     lcd.setCursor(x,y);
     lcd.print(message);
-  //Serial.println(message);
 }
 
 void clearLCD() {
@@ -143,63 +138,9 @@ void refreshPotentiometerDisplay() {
   printLCD("Primo: " + String(curr),0, 1);
 }
 
-/*
-https://mundoprojetado.com.br/buzzer-como-usar-com-o-arduino/
-Frequência das notas:
-Dó - 262 Hz
-Ré - 294 Hz
-Mi - 330 Hz
-Fá - 349 Hz
-Sol - 392 Hz
-Lá - 440 Hz
-Si - 494 Hz
-Dó - 528 Hz
-*/
-void playNote(int frequency, int duration) {
-  float period = 1000.0/frequency; //Periodo em ms
-  for (int i = 0; i< duration/(period);i++){ //Executa a rotina de dentro o tanta de vezes que a frequencia desejada cabe dentro da duracao
-    digitalWrite(BUZZER_PORT,HIGH);
-    delayMicroseconds(period*500); //Metade do periodo em ms
-    digitalWrite(BUZZER_PORT, LOW);
-    delayMicroseconds(period*500);
-  }
-}
-
-// Playground
-
-void anim_1_test(bool clean_before) {
-  short int maxX = 15;
-  short int maxY = 1;
-  const String alphabet{"abcdefghijklmnopqrstuvwxyz"};
-  int index = 0;
-
-  for(int x=0; x<=maxX; x++) {
-    for(int y=0; y<=maxY; y++) {
-      char letter = alphabet[index % alphabet.length() - 1];
-      index++;
-
-      // Já que o cursor está na posição anterior, podemos usar a função genérica para isso.
-      if(clean_before) {
-        printLCD("");
-      }
-      printLCD(String(letter), x, y);
-    }
-  }
-}
-
 void startup() {
-  char a[] = "Criptografia - IC";
   char b[] = "Aperte o botao";
   clearLCD();
-  printLCD("Criptografia IC           ",0,0);
+  printLCD("SESI CriptoBox",0,0);
   printLCD(b,0,1);
-
-  /*int x = 0;
-  for(char b : a) {
-    x++;
-    printLCD(String(b),x , 0); delay(250);
-  }
- 
-  printLCD("Aperte o botao", 0, 1); 
-   delay(500);*/
 }
