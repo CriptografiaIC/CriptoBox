@@ -105,7 +105,7 @@ void onPotentiometerValueChange(int from, int to) {
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 
 void setupLCD () {
-    log("setupLCD", "Inicializando LCD com autoscroll.");
+    log("setupLCD", "Inicializando LCD.");
     lcd.begin(16, 2);
 }
 
