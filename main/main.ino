@@ -1,4 +1,5 @@
 #include <LiquidCrystal.h>
+#include <math.h>
 
 // https://docs.arduino.cc/learn/electronics/lcd-displays
 
@@ -25,10 +26,11 @@
 */
 
 short int currentStage = 0;
-short int p;
-short int q;
+double p;
+double q;
+double msg;
 short int curr = 0;
-int primes[11] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
+int primes[11] = {3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
 int lastPotPos;
 void setup() {
   // put your setup code here, to run once:
@@ -74,13 +76,18 @@ void onButtonPress() {
     curr = 0;
     clearLCD();
     printLCD("Variavel q", 0,0);
-  } else
+  } else if(curr == 0 ) return; else
   if(currentStage == 2) {
     currentStage = 3; // Prossegue com o jogo.
     q = curr; // Salva a variável
     curr = 0;
     clearLCD();
-    printLCD("Fim de execucao", 0, 0);
+    printLCD("Mensagem", 0, 0);
+  } else if(curr == 0 ) return; else
+  if(currentStage == 3) {
+    currentStage = 4; // Prossegue com o jogo.
+    msg = curr; // Salva a variável
+    calcRSA(p,q,12);
   }
 }
 
@@ -97,7 +104,7 @@ void onPotentiometerValueChange(int from, int to) {
   log("onPotentiometerValueChange", String(getCurrentPotentiometerPosition()));
   lastPotPos = to;
   curr = primes[(int) (floor(to/93) >= 11 ? 10 : floor(to/93))];
-  if(currentStage == 1 || currentStage == 2) refreshPotentiometerDisplay();
+  if(currentStage == 1 || currentStage == 2 || currentStage == 3) refreshPotentiometerDisplay();
 }
 
 
@@ -144,3 +151,47 @@ void startup() {
   printLCD("SESI CriptoBox",0,0);
   printLCD(b,0,1);
 }
+
+int mmc (int a, int b) {
+  	int temp; //variável temporária
+	while (1) {
+		temp = a % b;
+		if (temp == 0)
+			return b;
+		a = b;
+		b = temp;
+	}
+}
+  
+int calcRSA(double p, double q, double msg) {
+    double n = p * q;
+    double phi = (p-1) * (q-1);
+    
+    double e = 2; //primeira parte da chave publica
+    while (e < phi) {
+      if (mmc(e, phi) == 1)
+        break;
+      else
+        e++;
+    }
+    
+  double k = 2; //constante
+    
+  double d = (1 + (k * phi)) / e;
+   
+  Serial.println(d);
+  Serial.println(msg);
+ 
+  // Encryption c = (msg ^ e) % n
+  double c = pow(msg, e);
+  c = fmod(c, n);
+  Serial.println(c);
+ 
+  // Decryption m = (c ^ d) % n
+  double m = pow(c, d);
+  m = fmod(m, n);
+  Serial.println(m);
+ 
+  return 0;
+} 
+  
