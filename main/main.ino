@@ -27,6 +27,7 @@
 
 short int currentStage = 0;
 short int page = 1;
+boolean potentiometerLock = false;
 double p;
 double q;
 double msg;
@@ -46,7 +47,7 @@ void loop() {
 
   if (isButtonPressed()) onButtonPress();
   int pot = getCurrentPotentiometerPosition();
-  if (pot != lastPotPos) onPotentiometerValueChange(lastPotPos, pot);
+  if (pot != lastPotPos && !potentiometerLock) onPotentiometerValueChange(lastPotPos, pot);
 
   int x = digitalRead(BUTTON_PORT);
 }
@@ -83,6 +84,8 @@ void onButtonPress() {
     clearLCD();
     printLCD("Mensagem", 0, 0);
   } else if (curr == 0 ) return; else if (currentStage == 3) {
+    blink(false);
+    setPotentiometerLock(true);
     // currentStage = 4; // Prossegue com o jogo.
     msg = curr; // Salva a variável
     double* rsa;
@@ -99,6 +102,8 @@ void onButtonPress() {
       page--;
     }
 
+    setCursor(15,0);
+	blink(true);
   }
 }
 
@@ -118,6 +123,10 @@ void onPotentiometerValueChange(int from, int to) {
   if (currentStage == 1 || currentStage == 2 || currentStage == 3) refreshPotentiometerDisplay();
 }
 
+void setPotentiometerLock(bool state) {
+  log("setPotentiometerLock", "Mudanca de estado para " + String(state));
+	potentiometerLock = state;
+}
 
 
 LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
@@ -136,6 +145,14 @@ void printLCD(const String message, short unsigned int x, short unsigned int y) 
   log("printLCD", "Imprimiu '" + message + "' nas coordenadas " + x + "," + y);
   lcd.setCursor(x, y);
   lcd.print(message);
+}
+
+void setCursor(int x, int y) {
+	lcd.setCursor(x,y);
+}
+
+void blink(bool state) {
+	if(state) lcd.blink(); else lcd.noBlink(); 
 }
 
 void clearLCD() {
