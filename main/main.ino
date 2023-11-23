@@ -163,35 +163,16 @@ int mmc (int a, int b) {
 	}
 }
   
-int calcRSA(double p, double q, double msg) {
-    double n = p * q;
-    double phi = (p-1) * (q-1);
-    
-    double e = 2; //primeira parte da chave publica
-    while (e < phi) {
-      if (mmc(e, phi) == 1)
-        break;
-      else
-        e++;
-    }
-    
-  double k = 2; //constante
-    
-  double d = (1 + (k * phi)) / e;
+// return: [p,q,c,d,e,msg]
+double* calcRSA(double p, double q, double msg) {
+   double e = 3;
    
-  Serial.println(d);
-  Serial.println(msg);
- 
-  // Encryption c = (msg ^ e) % n
-  double c = pow(msg, e);
-  c = fmod(c, n);
-  Serial.println(c);
- 
-  // Decryption m = (c ^ d) % n
-  double m = pow(c, d);
-  m = fmod(m, n);
-  Serial.println(m);
- 
-  return 0;
-} 
+   double phi_n = phi(p,q);
+   double d = fmod(1/e, phi_n); // d = e^-1 % φ(n)
+   double c = pow(msg, e); // c = msg^e
+
+   // Then c^d should equals msg
+   double a[6] = {p,q,c,d,e,msg};
+   return a;
+}
   
