@@ -20,14 +20,16 @@
 // https://docs.arduino.cc/learn/electronics/potentiometer-basics
 #define POTENTIOMETER_PORT A5
 
+// 0: Prime , 1: Num
+short int currentMode = 0;
+
 /* 0: Tela inicial
    1: Escolha do primo p
    2: Escolha do primo q
 */
-
 short int currentStage = 0;
 short int page = 1;
-boolean potentiometerLock = false;
+boolean potentiometerLock = true;
 double p;
 double q;
 double msg;
@@ -68,6 +70,7 @@ bool isButtonPressed() {
 void onButtonPress() {
   log("onButtonPress", "pressionado " + String(digitalRead(BUTTON_PORT) + " / curr: " + String(curr)));
   if (currentStage == 0) { // Muda para o 1
+    setPotentiometerLock(false);
     currentStage = 1;
     clearLCD();
     printLCD("Variavel p", 0, 0);
@@ -83,13 +86,14 @@ void onButtonPress() {
     curr = 0;
     clearLCD();
     printLCD("Mensagem", 0, 0);
+    changeCurrentMode(1);
   } else if (curr == 0 ) return; else if (currentStage == 3) {
     blink(false);
     setPotentiometerLock(true);
     // currentStage = 4; // Prossegue com o jogo.
     msg = curr; // Salva a variável
     double* rsa;
-    rsa = calcRSA(p, q, 12); // [p,q,c,d,e,msg]
+    rsa = calcRSA(p, q, msg); // [p,q,c,d,e,msg]
     clearLCD();
     printLCD(String(page), 15, 0);
     if (page == 1) {
@@ -103,7 +107,7 @@ void onButtonPress() {
     }
 
     setCursor(15,0);
-	blink(true);
+  blink(true);
   }
 }
 
@@ -119,13 +123,21 @@ int getCurrentPotentiometerPosition() {
 void onPotentiometerValueChange(int from, int to) {
   log("onPotentiometerValueChange", String(getCurrentPotentiometerPosition()));
   lastPotPos = to;
-  curr = primes[(int) (floor(to / 93) >= 11 ? 10 : floor(to / 93))];
-  if (currentStage == 1 || currentStage == 2 || currentStage == 3) refreshPotentiometerDisplay();
+  curr = currentMode == 0 ?
+          primes[(int) (floor(to / 93) >= 11 ? 10 : floor(to / 93))] 
+         :floor(to/93);
+  refreshPotentiometerDisplay();
+}
+
+void changeCurrentMode(int newMode) {
+  log("changeCurrentMode", "Mudança de modo para " + String(newMode));
+  currentMode = newMode;
+  if(newMode == 0) refreshPotentiometerDisplay();
 }
 
 void setPotentiometerLock(bool state) {
   log("setPotentiometerLock", "Mudanca de estado para " + String(state));
-	potentiometerLock = state;
+  potentiometerLock = state;
 }
 
 
@@ -148,11 +160,11 @@ void printLCD(const String message, short unsigned int x, short unsigned int y) 
 }
 
 void setCursor(int x, int y) {
-	lcd.setCursor(x,y);
+  lcd.setCursor(x,y);
 }
 
 void blink(bool state) {
-	if(state) lcd.blink(); else lcd.noBlink(); 
+  if(state) lcd.blink(); else lcd.noBlink(); 
 }
 
 void clearLCD() {
@@ -170,7 +182,8 @@ void setLCDState(bool state) {
 }
 
 void refreshPotentiometerDisplay() {
-  printLCD("Primo: " + String(curr) + "  ", 0, 1);
+  String prefix = currentMode == 0 ? "Primo: " : "Numero: ";
+  printLCD(prefix + String(curr) + "  ", 0, 1);
 }
 
 void startup() {
@@ -186,9 +199,8 @@ double phi(double p, double q) {
 
 // return: [p,q,c,d,e,msg]
 double* calcRSA(double p, double q, double msg) {
-  double e = 3;
-
   double phi_n = phi(p, q);
+  double e = 3; 
   double d = fmod(1 / e, phi_n); // d = e^-1 % φ(n)
   double c = pow(msg, e); // c = msg^e
 
